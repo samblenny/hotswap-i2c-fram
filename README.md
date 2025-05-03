@@ -204,3 +204,116 @@ Menu:
  5  Erase first 64 bytes (set to 0) of slot 1 FRAM
 choice [1]:
 ```
+
+
+## Usage Example (1 slot build)
+
+Here's a serial console log where I:
+
+1. Start with the slot empty
+2. Slot gray FRAM cart
+3. Erase gray cart then change its message
+3. Remove gray cart
+4. Slot green cart then change its message
+
+The lines with `Menu:` ... `choice [1]: ` are prompts to input a number to
+make a selection from the menu of actions.
+
+```
+PCA9546A MUX NOT FOUND. STARTING IN ONE SLOT MODE.
+
+
+Slot: Empty
+
+Menu:
+ 1  Print FRAM cart header bytes
+ 2  Write message to FRAM (max 64 bytes)
+ 3  Erase first 64 bytes of FRAM
+choice [1]: 1
+
+fram_bytes[0:64]:
+  47 52 41 59 20 43 41 52 54 00 00 00 00 00 00 00   GRAY CART.......
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+
+Menu:
+ 1  Print FRAM cart header bytes
+ 2  Write message to FRAM (max 64 bytes)
+ 3  Erase first 64 bytes of FRAM
+choice [1]: 3
+ok
+
+fram_bytes[0:64]:
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+
+Menu:
+ 1  Print FRAM cart header bytes
+ 2  Write message to FRAM (max 64 bytes)
+ 3  Erase first 64 bytes of FRAM
+choice [1]: 2
+Message to write? (max 64 chars): This is the gray cart
+ok
+
+fram_bytes[0:64]:
+  54 68 69 73 20 69 73 20 74 68 65 20 67 72 61 79   This is the gray
+  20 63 61 72 74 00 00 00 00 00 00 00 00 00 00 00    cart...........
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+
+Menu:
+ 1  Print FRAM cart header bytes
+ 2  Write message to FRAM (max 64 bytes)
+ 3  Erase first 64 bytes of FRAM
+choice [1]: 1
+
+Slot: Empty
+
+Menu:
+ 1  Print FRAM cart header bytes
+ 2  Write message to FRAM (max 64 bytes)
+ 3  Erase first 64 bytes of FRAM
+choice [1]: 1
+
+fram_bytes[0:64]:
+  47 52 45 45 4e 20 43 41 52 54 00 00 00 00 00 00   GREEN CART......
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+
+Menu:
+ 1  Print FRAM cart header bytes
+ 2  Write message to FRAM (max 64 bytes)
+ 3  Erase first 64 bytes of FRAM
+choice [1]: 3
+ok
+
+fram_bytes[0:64]:
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+
+Menu:
+ 1  Print FRAM cart header bytes
+ 2  Write message to FRAM (max 64 bytes)
+ 3  Erase first 64 bytes of FRAM
+choice [1]: 2
+Message to write? (max 64 chars): This is the green cart
+ok
+
+fram_bytes[0:64]:
+  54 68 69 73 20 69 73 20 74 68 65 20 67 72 65 65   This is the gree
+  6e 20 63 61 72 74 00 00 00 00 00 00 00 00 00 00   n cart..........
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+
+Menu:
+ 1  Print FRAM cart header bytes
+ 2  Write message to FRAM (max 64 bytes)
+ 3  Erase first 64 bytes of FRAM
+choice [1]:
+```
