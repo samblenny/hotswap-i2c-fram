@@ -12,12 +12,13 @@ help:
 	@echo "open serial terminal:         make tty"
 
 # This is for use by .github/workflows/buildbundle.yml GitHub Actions workflow
+# To use this on Debian, you might need to apt install curl and zip.
 bundle:
 	@mkdir -p build
 	python3 bundle_builder.py
 
 # Sync current code and libraries to CIRCUITPY drive.
-# This should work on macOS or Debian (see mount / umount targets below)
+# This should work on macOS or Debian (see mount / umount targets below).
 sync: bundle
 	@if [ -d /Volumes/CIRCUITPY ]; then \
 		xattr -cr build; \
@@ -28,25 +29,26 @@ sync: bundle
 		sync; fi
 
 # Serial terminal: 115200 baud, no flow control (-fn)
-# This should work on macOS or Debian
+# This should work on macOS or Debian. On Debian, your login account must be
+# in the dialout group or screen won't open the serial port.
 tty:
-	if [ -d /dev/ttyACM0 ]; then \
-		screen -fn /dev/ttyACM0 115200; \
-	else \
+	if [ -e /dev/ttyACM0 ]; then \
+		screen -fn /dev/ttyACM0 115200; fi
+	if [ -e /dev/tty/usbmodem* ]; then \
 		screen -fn /dev/tty.usbmodem* 115200; fi
 
 clean:
 	rm -rf build
 
 # Mount CIRCUITPY from Debian command line
-# You might need to do `sudo apt install pmount` before using this.
+# You might need to apt install pmount before using this.
 mount:
 	@if [ ! -d /media/CIRCUITPY ] ; then \
 		pmount `readlink -f /dev/disk/by-label/CIRCUITPY` CIRCUITPY; else \
 		echo "/media/CIRCUITPY was already mounted"; fi
 
 # Unmount CIRCUITPY from Debian command line.
-# You might need to do `sudo apt install pmount` before using this.
+# You might need to apt install pmount before using this.
 umount:
 	@if [ -d /media/CIRCUITPY ] ; then pumount CIRCUITPY; else \
 		echo "/media/CIRCUITPY wasn't mounted"; fi
