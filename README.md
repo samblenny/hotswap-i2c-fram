@@ -22,9 +22,9 @@ CircuitPython Library dependencies (see bundle_manifest.cfg):
 - adafruit_fram
 
 
-## Usage Example
+## Usage Example (2 slot build)
 
-Here's a serial console log where:
+Here's a serial console log where I:
 
 1. Start with both slots are empty
 2. Slot gray FRAM cart into slot 0
