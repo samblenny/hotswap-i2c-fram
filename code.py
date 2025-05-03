@@ -46,47 +46,39 @@ def hexdump(data):
             hex_buf.append('  ' * row_len - len(hex_buf))
         print(' ', ' '.join(hex_buf), ' ', ''.join(ascii_buf))
 
-def read(mux_channel, start=0, end=LIMIT):
+def read(fram, start=0, end=LIMIT):
     # Read + hexdump a range of bytes from FRAM chip on selected mux channel.
     # This may raise exceptions if FRAM is not present or range not valid.
-    fram = FRAM_I2C(mux_channel)
     hexdump(fram[start:end])
 
-def write(mux_channel):
+def write(fram):
     # Prompt for message and write it to an FRAM cart on selected mux channel
     # This may raise exceptions if FRAM is not present.
-    fram = FRAM_I2C(mux_channel)
     msg = input(f"Message to write? (max {LIMIT} chars): ")
     clipped_msg = msg.encode()[:LIMIT]
     fram[0:len(clipped_msg)] = clipped_msg
     print("ok")
 
-def erase(mux_channel, start=0, end=LIMIT):
+def erase(fram, start=0, end=LIMIT):
     # Erase a range of bytes of FRAM chip on selected mux channel
-    fram = FRAM_I2C(mux_channel)
     for i in range(LIMIT):
         fram[i] = 0
     print("ok")
 
-def probe_fram(mux_channel):
-    # Return True if an FRAM chip is present on the selected I2C mux channel
-    present = False
-    if mux_channel.try_lock():
-        present = mux_channel.probe(I2C_ADDR_FRAM)
-        mux_channel.unlock()
-    return present
-
 def scan_slot(mux, channel):
     # Check for FRAM cart on selected channel, hexdump header bytes if found
-    if not probe_fram(mux[channel]):
+    present = False
+    if mux[channel].try_lock():
+        present = mux[channel].probe(I2C_ADDR_FRAM)
+        mux[channel].unlock()
+    if not present:
         print(f"Slot {channel}: Empty")
     else:
         print(f"Slot {channel} fram_bytes[0:{LIMIT}]:")
-        read(mux[channel], 0, LIMIT)
+        fram = FRAM_I2C(mux[channel])
+        read(fram, 0, LIMIT)
 
-def main():
-    i2c = STEMMA_I2C()
-    mux = PCA9546A(i2c)
+def two_slot_main_loop(mux):
     while True:
         # Always start by scanning for carts and printing their header bytes
         print()
@@ -96,28 +88,42 @@ def main():
         print()
         # Show menu prompt and parse the response
         n = input(MENU)
-        if n == "1":
-            # Skip to next loop iteration to print the header bytes
-            continue
-        if n == "2":
-            try:
-                write(mux[0])
-            except OSError:
-                print(NO_CART_ERROR)
-        if n == "3":
-            try:
-                write(mux[1])
-            except OSError:
-                print(NO_CART_ERROR)
-        elif n == "4":
-            try:
-                erase(mux[0])
-            except OSError:
-                print(NO_CART_ERROR)
-        elif n == "5":
-            try:
-                erase(mux[1])
-            except OSError:
-                print(NO_CART_ERROR)
+        try:
+            if n == "1":
+                # Skip to next loop iteration to print the header bytes
+                continue
+            if n == "2":
+                # Write to slot 0
+                fram = FRAM_I2C(mux[0])
+                write(fram)
+            if n == "3":
+                # Write to slot 1
+                fram = FRAM_I2C(mux[1])
+                write(fram)
+            elif n == "4":
+                # Erase slot 0
+                fram = FRAM_I2C(mux[0])
+                erase(fram)
+            elif n == "5":
+                # Erase slot 1
+                fram = FRAM_I2C(mux[1])
+                erase(fram)
+        except OSError:
+            print(NO_CART_ERROR)
+        except ValueError:
+            print(NO_CART_ERROR)
+
+def main():
+    i2c = STEMMA_I2C()
+    try:
+        mux = PCA9546A(i2c)
+        two_slot_main_loop(mux)
+    except OSError as e:
+        print("==============================================================")
+        print("It looks like you don't have a PCA9545A multiplexer connected.")
+        print("To run with out a mux, you will need to modify the code.")
+        print("==============================================================")
+        print()
+        raise e
 
 main()
