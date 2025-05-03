@@ -34,7 +34,7 @@ sync: bundle
 tty:
 	if [ -e /dev/ttyACM0 ]; then \
 		screen -fn /dev/ttyACM0 115200; fi
-	if [ -e /dev/tty/usbmodem* ]; then \
+	if [ -e /dev/tty.usbmodem* ]; then \
 		screen -fn /dev/tty.usbmodem* 115200; fi
 
 clean:
