@@ -12,7 +12,6 @@
 # - https://learn.adafruit.com/adafruit-tca4307
 # - https://learn.adafruit.com/adafruit-i2c-fram-breakout
 # - https://docs.circuitpython.org/projects/tca9548a/en/latest/
-# -
 #
 from board import STEMMA_I2C
 from micropython import const
@@ -24,12 +23,18 @@ LIMIT = const(64)
 I2C_ADDR_FRAM = const(0x50)
 I2C_ADDR_MUX = const(0x70)
 
-MENU = f"""Menu:
+MENU_2_SLOTS = f"""Menu:
  1  Scan for FRAM carts and print their header bytes
  2  Write message to slot 0 FRAM (max {LIMIT} bytes)
  3  Write message to slot 1 FRAM (max {LIMIT} bytes)
  4  Erase first {LIMIT} bytes (set to 0) of slot 0 FRAM
  5  Erase first {LIMIT} bytes (set to 0) of slot 1 FRAM
+choice [1]: """
+
+MENU_1_SLOT = f"""Menu:
+ 1  Print FRAM cart header bytes
+ 2  Write message to FRAM (max {LIMIT} bytes)
+ 3  Erase first {LIMIT} bytes of FRAM
 choice [1]: """
 
 NO_CART_ERROR = "Unable to access FRAM"
@@ -65,12 +70,30 @@ def erase(fram, start=0, end=LIMIT):
         fram[i] = 0
     print("ok")
 
+def mux_probe(mux_channel, addr):
+    # Return true if device with address addr exists on specified mux channel
+    present = False
+    if mux_channel.try_lock():
+        present = mux_channel.probe(addr)
+        mux_channel.unlock()
+    return present
+
+def probe_without_mux(i2c, addr):
+    # Return true if device with address addr exists on i2c bus
+    present = False
+    i2c.try_lock()
+    try:
+        i2c.writeto(addr, b'')
+        present = True
+    except OSError:
+        pass
+    finally:
+        i2c.unlock()
+    return present
+
 def scan_slot(mux, channel):
     # Check for FRAM cart on selected channel, hexdump header bytes if found
-    present = False
-    if mux[channel].try_lock():
-        present = mux[channel].probe(I2C_ADDR_FRAM)
-        mux[channel].unlock()
+    present = mux_probe(mux[channel], I2C_ADDR_FRAM)
     if not present:
         print(f"Slot {channel}: Empty")
     else:
@@ -87,7 +110,7 @@ def two_slot_main_loop(mux):
         scan_slot(mux, 1)
         print()
         # Show menu prompt and parse the response
-        n = input(MENU)
+        n = input(MENU_2_SLOTS)
         try:
             if n == "1":
                 # Skip to next loop iteration to print the header bytes
@@ -113,17 +136,56 @@ def two_slot_main_loop(mux):
         except ValueError:
             print(NO_CART_ERROR)
 
+def one_slot_main_loop(i2c):
+    while True:
+        # Start by checking for cart and trying to print its header bytes
+        print()
+        if not probe_without_mux(i2c, I2C_ADDR_FRAM):
+            print("Slot: Empty")
+        else:
+            try:
+                fram = FRAM_I2C(i2c)
+                print(f"fram_bytes[0:{LIMIT}]:")
+                read(fram, 0, LIMIT)
+            except ValueError as e:
+                raise e
+        print()
+        # Show menu prompt and parse the response
+        n = input(MENU_1_SLOT)
+        try:
+            if n == "1":
+                # Skip to next loop iteration to print the header bytes
+                continue
+            if n == "2":
+                # Write to FRAM
+                if probe_without_mux(i2c, I2C_ADDR_FRAM):
+                    fram = FRAM_I2C(i2c)
+                    write(fram)
+                else:
+                    print(NO_CART_ERROR)
+            elif n == "3":
+                # Erase slot FRAM
+                if probe_without_mux(i2c, I2C_ADDR_FRAM):
+                    fram = FRAM_I2C(i2c)
+                    erase(fram)
+                else:
+                    print(NO_CART_ERROR)
+        except OSError:
+            print(NO_CART_ERROR)
+        except ValueError:
+            print(NO_CART_ERROR)
+
 def main():
     i2c = STEMMA_I2C()
+    use_one_slot = False
     try:
         mux = PCA9546A(i2c)
         two_slot_main_loop(mux)
     except OSError as e:
-        print("==============================================================")
-        print("It looks like you don't have a PCA9545A multiplexer connected.")
-        print("To run with out a mux, you will need to modify the code.")
-        print("==============================================================")
+        print("PCA9546A MUX NOT FOUND. STARTING IN ONE SLOT MODE.")
         print()
-        raise e
+        use_one_slot = True
+    if use_one_slot:
+        one_slot_main_loop(i2c)
 
 main()
