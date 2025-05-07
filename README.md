@@ -22,8 +22,8 @@ CircuitPython Library dependencies (see bundle_manifest.cfg):
 - `adafruit_fram`
 - `adafruit_tca9548a`
 
-The code detects whether you have a I2C multiplexer wired up and selects
-between the one-slot and two-slot modes accordingly.
+The [sample code](code.py) detects whether you have an I2C multiplexer wired up
+and selects between the one-slot and two-slot modes accordingly.
 
 
 ## Usage Example (two-slot build)
