@@ -6,7 +6,7 @@
 
 ![base-with-carts](base-with-carts.jpeg)
 
-This repo has code and design files for a hot-swappable I2C FRAM memory
+This repo has code and design files for hot-swappable I2C FRAM memory
 cartridges meant for use with the TCA4307 hot-swap I2C buffer and PCA9546 I2C
 multiplexer.
 
@@ -14,15 +14,19 @@ Related guide:
 [I2C FRAM Memory Carts](https://adafruit-playground.com/u/SamBlenny/pages/i2c-fram-memory-carts)
 
 Designed the cart shell with Blender 4.4 using lots of geometry node modifiers.
-For STL, .3mf, and .blend files, check out `fram-cart-shell-*` in the top level
-of this repo.
+For STL, .3mf, and .blend files, check out `fram-cart*` in the top level of
+this repo.
 
 CircuitPython Library dependencies (see bundle_manifest.cfg):
-- adafruit_bus_device
-- adafruit_fram
+- `adafruit_bus_device`
+- `adafruit_fram`
+- `adafruit_tca9548a`
+
+The code detects whether you have a I2C multiplexer wired up and selects
+between the one-slot and two-slot modes accordingly.
 
 
-## Usage Example (2 slot build)
+## Usage Example (two-slot build)
 
 Here's a serial console log where I:
 
@@ -206,7 +210,7 @@ choice [1]:
 ```
 
 
-## Usage Example (1 slot build)
+## Usage Example (one-slot build)
 
 Here's a serial console log where I:
 
